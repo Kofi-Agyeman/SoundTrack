@@ -56,5 +56,4 @@ def search_sfx():
                 })
     return render_template('search_results.html', results=results , result_count = len(results) , query=query)
 
-if __name__ == "__main__":
-    app.run(debug = True)
+app.run()
