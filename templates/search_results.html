@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SoundTrack — Search Results</title>
+  <meta name="description" content="SoundTrack — search results (frontend only), white & black theme to match index." />
+
+  <!-- Robotic / techno wordmark -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --page-bg: #ffffff;
+      --panel: #ffffff;
+      --text: #0b0b0b;
+      --muted: rgba(11,11,11,0.56);
+      --muted-strong: rgba(11,11,11,0.85);
+      --accent: #000000;
+      --soft: #f3f4f6;
+      --divider: #e6e7e9;
+      --radius: 12px;
+      --shadow: 0 10px 30px rgba(15,15,15,0.06);
+      --header-height: 120px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      min-height:100vh;
+      background: linear-gradient(180deg, var(--page-bg) 0%, #fbfbfb 100%);
+      color: var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      box-sizing:border-box;
+      padding-top: calc(var(--header-height) + 20px);
+      padding-left: 20px;
+      padding-right: 20px;
+      padding-bottom: 36px;
+    }
+
+    /* Top-left brand (keeps parity with index) */
+    .top-mark {
+      position: fixed;
+      top: 12px;
+      left: 14px;
+      display:flex;
+      gap:8px;
+      align-items:center;
+      z-index: 80;
+      user-select:none;
+      text-decoration: none;
+    }
+    .logo-square{
+      width:54px;
+      height:54px;
+      border-radius:10px;
+      background: var(--accent);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 8px 24px rgba(15,15,15,0.06), inset 0 -6px 12px rgba(255,255,255,0.02);
+      flex-shrink:0;
+    }
+    .logo-square svg { width:28px; height:28px; }
+
+    .wordmark {
+      display:inline-flex;
+      gap:6px;
+      align-items:center;
+      font-family: 'Orbitron', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      font-weight:900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text);
+    }
+
+    /* HERO / banner - full-bleed */
+    .hero {
+      position: relative;
+      width: 100vw;
+      left: 50%;
+      right: 50%;
+      margin-left: -50vw;
+      margin-right: -50vw;
+      max-width: none;
+      overflow: hidden;
+      box-shadow: 0 14px 40px rgba(15,15,15,0.06);
+      background: var(--soft);
+      z-index: 10;
+    }
+    .hero .media {
+      width: 100%;
+      height: clamp(220px, 30vh, 420px);
+      display:block;
+      object-fit: cover;
+      object-position: center;
+    }
+    /* darker overlay so white text reads well */
+    .hero .overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,0.46), rgba(0,0,0,0.36));
+      pointer-events: none;
+    }
+    .hero .hero-content {
+      position: absolute;
+      left: 5%;
+      right: 5%;
+      top: 50%;
+      transform: translateY(-50%);
+      display:flex;
+      gap:18px;
+      align-items:center;
+      justify-content:space-between;
+      color: #fff; /* white text in banner for readability */
+      text-shadow: 0 6px 22px rgba(0,0,0,0.6);
+      z-index: 12;
+    }
+    .hero .hero-left { display:flex; flex-direction:column; gap:8px; max-width: 68%; }
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(20px, 3.6vw, 36px);
+      font-weight: 900;
+      letter-spacing: -0.01em;
+      color: #fff;
+    }
+    .hero p.lead {
+      margin:0;
+      color: rgba(255,255,255,0.92);
+      font-size: 15px;
+      max-width: 60ch;
+    }
+
+    /* Results counter (large & bold) inside banner - white */
+    .results-counter {
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap:6px;
+      text-align:right;
+      min-width: 160px;
+    }
+    .results-counter .num {
+      font-size: clamp(34px, 6.2vw, 64px);
+      font-weight: 900;
+      color: #fff;
+      line-height: 1;
+      text-shadow: 0 8px 28px rgba(0,0,0,0.6);
+    }
+    .results-counter .label {
+      color: rgba(255,255,255,0.9);
+      font-size: 13px;
+      font-weight:600;
+      text-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    }
+
+    /* explanatory message under banner */
+    .hero-note {
+      max-width: 1100px;
+      margin: 12px auto 20px;
+      padding: 12px 18px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(0,0,0,0.01), rgba(0,0,0,0.005));
+      border: 1px solid var(--divider);
+      color: var(--muted-strong);
+      font-size: 15px;
+      line-height: 1.5;
+      box-shadow: 0 6px 18px rgba(15,15,15,0.03);
+    }
+
+    /* Controls & results area */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 18px;
+      box-sizing: border-box;
+    }
+    .controls { display:flex; gap:12px; align-items:center; justify-content:flex-end; margin-bottom:12px; flex-wrap:wrap; }
+    .controls .left { margin-right:auto; display:flex; gap:8px; align-items:center; }
+    .select, .search-small { background: var(--panel); border:1px solid var(--divider); color: var(--text); padding:8px 10px; border-radius:10px; font-size:14px; }
+
+    .results { display:flex; flex-direction:column; gap:12px; }
+    .track {
+      display:flex;
+      align-items:center;
+      gap:14px;
+      padding:12px;
+      background: var(--panel);
+      border-radius: 10px;
+      border: 1px solid var(--divider);
+      transition: transform .12s ease, box-shadow .12s ease, background .12s;
+      width:100%;
+      box-sizing:border-box;
+    }
+    .track:focus-within, .track:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(15,15,15,0.06); background: linear-gradient(180deg, #ffffff, #fbfbfb); }
+    .thumb { width:84px; height:84px; min-width:84px; border-radius:8px; background:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01)); overflow:hidden; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .meta-wrap { display:flex; flex-direction:column; gap:6px; min-width:0; flex:1; }
+    .title { font-size:15px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .byline { display:flex; gap:10px; align-items:center; color:var(--muted); font-size:13px; flex-wrap:wrap; }
+    .badge { background: var(--soft); color:var(--muted); padding:4px 8px; border-radius:999px; font-size:12px; }
+    .track-right { display:flex; flex-direction:column; gap:8px; align-items:flex-end; justify-content:center; min-width:140px; }
+    .actions { display:flex; gap:8px; align-items:center; }
+    .btn.icon { width:40px; height:40px; padding:0; border-radius:8px; border: 1px solid rgba(0,0,0,0.06); background: var(--soft); color: var(--text); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+    .btn.icon svg { width:16px; height:16px; display:block; fill: none; stroke: var(--text); stroke-width:1.6; }
+    .btn.icon.play.playing { background: var(--text); color:#fff; }
+    .btn.view { background: transparent; border: 1px solid rgba(0,0,0,0.06); color: var(--text); padding:8px 10px; border-radius:10px; font-weight:600; font-size:13px; display:inline-flex; gap:8px; align-items:center; }
+    .duration { color: var(--muted); font-size:13px; font-weight:600; }
+    .pager { margin-top:18px; display:flex; gap:8px; justify-content:center; align-items:center; }
+    .page-btn { background: var(--panel); border: 1px solid var(--divider); color: var(--muted); padding:8px 12px; border-radius:8px; cursor:pointer; }
+    .empty { padding: 60px 20px; color: var(--muted); text-align:center; }
+
+    /* responsive tweaks */
+    @media (max-width:920px){
+      .hero .hero-content { top: 46%; }
+      .hero .hero-left { max-width: 62%; }
+      .results-counter { align-items:flex-start; text-align:left; }
+    }
+    @media (max-width:680px){
+      .hero { left: 50%; margin-left: -50vw; width: 100vw; }
+      .hero .hero-left { max-width: 100%; }
+      .hero .hero-content { flex-direction:column; align-items:flex-start; gap:12px; padding-left:5%; padding-right:5%; top: 52%; transform: translateY(-40%); }
+      .results-counter { align-self:flex-start; }
+      .track { padding:10px; gap:10px; }
+      .thumb { width:64px; height:64px; min-width:64px; }
+      .track-right { min-width:70px; }
+    }
+
+    .visually-hidden{ position:absolute!important; height:1px; width:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap; }
+  </style>
+</head>
+<body>
+  <!-- top-left brand -->
+  <a class="top-mark" href="/" id="brand" title="SoundTrack — Home">
+    <div class="logo-square" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" role="img">
+        <path d="M9 17a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" fill="#fff" opacity="0.98"/>
+        <path d="M21 3v10.5a3 3 0 1 1-2-2.83V6.2L8 9v8.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </div>
+
+    <div class="wordmark" aria-hidden="false" role="img" aria-label="SoundTrack">
+      <span class="logo-letter sound">S</span>
+      <span class="logo-letter sound">O</span>
+      <span class="logo-letter sound">U</span>
+      <span class="logo-letter sound">N</span>
+      <span class="logo-letter sound">D</span>
+      <span style="width:8px"></span>
+      <span class="logo-letter track">T</span>
+      <span class="logo-letter track">R</span>
+      <span class="logo-letter track">A</span>
+      <span class="logo-letter track">C</span>
+      <span class="logo-letter track">K</span>
+    </div>
+  </a>
+
+  <!-- HERO: high-def full-bleed banner -->
+  <section class="hero" aria-labelledby="hero-heading" role="region">
+    <picture>
+      <source srcset="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=2200&q=80&fm=webp" type="image/webp">
+      <img class="media" src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=2200&q=80" alt="Sound engineer at a mixing console with colorful studio lights" />
+    </picture>
+
+    <div class="overlay" aria-hidden="true"></div>
+
+    <div class="hero-content" role="presentation" aria-hidden="false">
+      <div class="hero-left">
+        <h1 id="hero-heading">Find the sound you hear — instantly</h1>
+        <p class="lead">AI-powered search matches timbre, rhythm and context. Instead of guessing keywords, describe or hum what you want and get precise sound-effect results and creative variants.</p>
+      </div>
+
+      <div class="results-counter" aria-live="polite" aria-atomic="true">
+        <div id="results-count" class="num">{{ results | length }}</div>
+        <div class="label">Results matched</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- explanatory message under banner -->
+  <div class="hero-note" role="note" aria-live="polite">
+    Traditional keyword search relies on metadata and tags. AI search analyzes the audio characteristics (timbre, spectral shape, transient detail) and natural language descriptions so you find sounds that actually match what you're imagining — faster, with fewer misses and more inspiring variations.
+  </div>
+
+  <!-- controls and results -->
+  <header class="page-header" role="search" aria-labelledby="query-title">
+    <div class="q-title" id="query-title">Search results</div>
+    <p class="meta" id="results-meta">Showing matches for your query</p>
+  </header>
+
+  <main class="container" role="main">
+    <div class="controls" role="toolbar" aria-label="Search controls">
+      <div class="left">
+        <label class="visually-hidden" for="filter">Filter</label>
+        <select id="filter" class="select" aria-label="Filter by genre">
+          <option value="">All genres</option>
+          <option>Pop</option>
+          <option>Rock</option>
+          <option>Hip-hop</option>
+          <option>Electronic</option>
+          <option>Classical</option>
+        </select>
+
+        <label class="visually-hidden" for="sort">Sort</label>
+        <select id="sort" class="select" aria-label="Sort results">
+          <option value="relevance">Relevance</option>
+          <option value="popular">Most popular</option>
+          <option value="recent">Newest</option>
+          <option value="duration">Duration</option>
+        </select>
+      </div>
+
+      <div>
+        <form action="/search-sfx" method="GET">
+          <label class="visually-hidden" for="mini-search">Refine</label>
+          <input id="mini-search" class="search-small" type="search" autocomplete="off" name="q" placeholder="Refine results" aria-label="Refine results" />
+        </form>
+      </div>
+    </div>
+      {% for result in results %}
+    <div id="results" class="results" role="list" aria-live="polite" aria-busy="false">
+      <!-- Static placeholder rows (optional). Remove or replace these with server-side or JS-rendered results as you integrate. -->
+
+        <div class="track" role="listitem" tabindex="0">
+        <div class="thumb" aria-hidden="true">
+          <img alt="Sample album art" src="https://picsum.photos/seed/sample1/320/320" loading="lazy" />
+        </div>
+        <div class="meta-wrap">
+          <div class="title" title="Midnight Echoes">{{ result.title }}</div>
+          <div class="byline">
+            <span class="artist">{{ result.tags}}</span>
+            <span class="badge">{{ result.category }}</span>
+          </div>
+        </div>
+        <div class="track-right" aria-hidden="false">
+          <div class="duration">{{ result.similarity }}s</div>
+          <div class="actions" role="group" aria-label="Track actions">
+<button class="btn icon play" type="button" data-src="{{ url_for('static', filename=result.path.split('SoundTrack\\', 1)[1].replace('\\', '/') ) }}" aria-label="Play {{ result.title }}" title="Play {{ result.title }}">▶</button>
+            <a href="{{ url_for('static', filename=result.path.split('SoundTrack\\', 1)[1].replace('\\', '/') ) }}" download="">
+              <button class="btn icon share" title="Download {{ result.title }}" type="button">⬇</button>
+            </a>
+
+            <button class="btn icon share" type="button" data-url="{{ url_for('static', filename=result.path.split('SoundTrack\\', 1)[1].replace('\\', '/') ) }}" aria-label="Share {{ result.title }}" title="Share {{ result.title }}">⤴</button>
+            <a class="btn view" href="#" role="link" aria-label="View Midnight Echoes">View</a>
+          </div>
+        </div>
+
+      </div>
+
+
+
+      <!-- Remove static placeholders when wiring your backend or front-end JS -->
+    </div>
+      {% endfor %}
+    <div id="pager" class="pager" aria-label="Pagination">
+      <!-- Static pager example -->
+      <button class="page-btn" type="button" title="Previous (no JS)">← Prev</button>
+      <button class="page-btn" type="button">1</button>
+      <button class="page-btn" type="button">2</button>
+      <button class="page-btn" type="button">3</button>
+      <button class="page-btn" type="button" title="Next (no JS)">Next →</button>
+    </div>
+  </main>
+
+  <script>
+  (function(){
+    console.log('[player] handler loaded');
+    const audio = new Audio();
+    audio.preload = 'auto';
+    let currentBtn = null;
+
+    function setPlaying(btn, playing){
+      if (!btn) return;
+      btn.classList.toggle('playing', !!playing);
+      btn.setAttribute('aria-pressed', playing ? 'true' : 'false');
+      btn.title = playing ? 'Pause ' + (btn.getAttribute('aria-label') || '') : 'Play ' + (btn.getAttribute('aria-label') || '');
+      btn.textContent = playing ? '⏸' : '▶';
+    }
+
+    document.addEventListener('click', async (ev) => {
+      const btn = ev.target.closest('.btn.icon.play');
+      if (!btn) return;
+      ev.preventDefault();
+
+      const src = btn.dataset.src;
+      if (!src) { console.warn('[player] play button missing data-src'); return; }
+
+      // If clicking the same button
+      if (currentBtn === btn) {
+        if (audio.paused) await audio.play();
+        else audio.pause();
+        setPlaying(btn, !audio.paused);
+        return;
+      }
+
+      // Different button: stop previous
+      if (currentBtn) {
+        setPlaying(currentBtn, false);
+      }
+
+      // Start new track
+      currentBtn = btn;
+      setPlaying(btn, true);
+      try {
+        if (audio.src !== src) {
+          audio.src = src;
+          audio.load();
+        }
+        await audio.play();
+      } catch (err) {
+        console.error('[player] play failed', err);
+        // fallback: open source in new tab
+        window.open(src, '_blank', 'noopener');
+        setPlaying(btn, false);
+        currentBtn = null;
+      }
+    });
+
+    audio.addEventListener('pause', () => { setPlaying(currentBtn, false); });
+    audio.addEventListener('play', () => { setPlaying(currentBtn, true); });
+    audio.addEventListener('ended', () => { setPlaying(currentBtn, false); currentBtn = null; audio.src = ''; });
+
+    // Clipboard share handler + toast
+    function _createToast(){
+      if (window.__share_toast) return window.__share_toast;
+      const t = document.createElement('div');
+      t.id = 'share-toast';
+      Object.assign(t.style, {
+        position: 'fixed',
+        bottom: '24px',
+        left: '50%',
+        transform: 'translateX(-50%) translateY(12px)',
+        padding: '8px 14px',
+        background: 'rgba(0,0,0,0.85)',
+        color: '#fff',
+        borderRadius: '999px',
+        fontSize: '13px',
+        opacity: '0',
+        transition: 'opacity 220ms ease, transform 220ms ease',
+        zIndex: 9999,
+        pointerEvents: 'none'
+      });
+      document.body.appendChild(t);
+      window.__share_toast = t;
+      return t;
+    }
+
+    function showToast(msg){
+      const t = _createToast();
+      t.textContent = msg;
+      t.style.opacity = '1';
+      t.style.transform = 'translateX(-50%) translateY(0)';
+      clearTimeout(t._hide);
+      t._hide = setTimeout(()=>{ t.style.opacity = '0'; t.style.transform = 'translateX(-50%) translateY(12px)'; }, 1600);
+    }
+
+    document.addEventListener('click', async (ev) => {
+      const sb = ev.target.closest('.btn.icon.share');
+      if (!sb) return;
+      ev.preventDefault();
+      let url = sb.dataset.url;
+      if (!url) { console.warn('[share] button missing data-url'); showToast('No link available'); return; }
+      // make absolute if needed
+      if (!/^https?:\/\//i.test(url)) url = location.origin + url;
+      try {
+        await navigator.clipboard.writeText(url);
+        showToast('Link copied to clipboard');
+      } catch (err) {
+        // fallback: use a temporary input and execCommand
+        try {
+          const input = document.createElement('input');
+          input.style.position = 'fixed'; input.style.left = '-9999px'; input.value = url;
+          document.body.appendChild(input);
+          input.select();
+          document.execCommand('copy');
+          input.remove();
+          showToast('Link copied to clipboard');
+        } catch (err2) {
+          console.error('[share] copy failed', err, err2);
+          showToast('Copy failed — opened link');
+          window.open(url, '_blank', 'noopener');
+        }
+      }
+    });
+
+  })();
+  </script>
+</body>
+</html>

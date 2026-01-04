@@ -1,0 +1,633 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SoundTrack — Search Music</title>
+  <meta name="description" content="SoundTrack — minimalist, white & black fullscreen music search interface (frontend only)." />
+
+  <!-- Roboto-esque robotic font for the wordmark -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      /* White & Black theme */
+      --page-bg: #ffffff;
+      --panel: #ffffff;
+      --text: #0b0b0b;
+      --muted: rgba(11,11,11,0.56);
+      --muted-strong: rgba(11,11,11,0.85);
+      --accent: #000000;
+      --soft: #f3f4f6;
+      --divider: #e6e7e9;
+      --radius: 12px;
+      --shadow: 0 10px 30px rgba(15,15,15,0.06);
+      --header-height: 120px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      min-height:100vh;
+      background: linear-gradient(180deg, var(--page-bg) 0%, #fbfbfb 100%);
+      color: var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      box-sizing:border-box;
+      /* make room for fixed top mark */
+      padding-top: calc(var(--header-height) + 20px);
+      padding-left: 20px;
+      padding-right: 20px;
+      padding-bottom: 40px;
+      position: relative;
+      isolation: isolate;
+    }
+
+    /* background art (subtle) */
+    .bg-art {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0.06;
+    }
+    .bg-art svg { width:100%; height:100%; display:block; }
+
+    /* top-left mark */
+    .top-mark {
+      position: fixed;
+      top: 12px;
+      left: 14px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      z-index: 80;
+      cursor:pointer;
+      user-select:none;
+      text-decoration: none;
+    }
+    .logo-box{
+      width:56px;
+      height:56px;
+      border-radius:10px;
+      background: var(--accent);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 8px 22px rgba(15,15,15,0.06), inset 0 -6px 12px rgba(255,255,255,0.02);
+      flex-shrink:0;
+    }
+    .logo-box svg { width:30px; height:30px; }
+
+    .wordmark {
+      display:inline-flex;
+      gap:6px;
+      align-items:center;
+      font-family: 'Orbitron', system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      font-weight:900;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text);
+      line-height:1;
+    }
+    .logo-letter.sound { color: var(--text); }
+    .logo-letter.track { color: rgba(11,11,11,0.65); }
+
+    .tagline {
+      display:block;
+      color: var(--muted);
+      font-size:12px;
+      margin-top:4px;
+      margin-left:4px;
+    }
+
+    /* central layout */
+    .page {
+      width: min(1100px, 94vw);
+      margin: 0 auto;
+      display:flex;
+      flex-direction:column;
+      gap:28px;
+      align-items:center;
+      z-index:20;
+    }
+
+    /* songs + visitors area (top of page content) */
+    .top-stats {
+      display:flex;
+      gap:40px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+      width:100%;
+    }
+
+    .stats {
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:6px;
+    }
+
+    .count {
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      font-size: clamp(28px, 7.5vw, 56px);
+      color: var(--text);
+      display:flex;
+      align-items:baseline;
+      justify-content:center;
+    }
+    .count small {
+      font-size: 0.26em;
+      color: var(--muted-strong);
+      margin-left: 8px;
+      transform: translateY(-6px);
+      font-weight:700;
+    }
+    .count-label { color: var(--muted); font-size: 13px; font-weight:600; }
+
+    /* search area */
+    form.search {
+      width: 100%;
+      max-width: 760px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      background: var(--panel);
+      border-radius: 999px;
+      padding: 14px 18px;
+      border: 1px solid var(--divider);
+      box-shadow: var(--shadow);
+      box-sizing:border-box;
+    }
+    .search .icon {
+      width:44px;
+      height:44px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:12px;
+      background: var(--soft);
+      margin-right:6px;
+      flex-shrink:0;
+    }
+    .search .icon svg { width:20px; height:20px; stroke: var(--text); opacity:0.9; }
+
+    input[type="search"]{ background: transparent; border:0; outline:0; color: var(--text); font-size: 16px; flex:1; padding:10px 8px; caret-color: var(--text); }
+    button[type="submit"]{ background: var(--accent); border:0; color: var(--page-bg); padding:10px 16px; border-radius:999px; font-weight:700; cursor:pointer; box-shadow: 0 8px 24px rgba(15,15,15,0.06); display:inline-flex; gap:8px; align-items:center; }
+
+    .note { color: var(--muted); font-size: 13px; text-align:center; max-width:900px; }
+
+    /* --- Benefits section (expanded to 6 cards) --- */
+    .benefits-wrap {
+      width:100%;
+      max-width:1100px;
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      align-items: start;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    .benefit {
+      background: rgba(11,11,11,0.02);
+      border: 1px solid var(--divider);
+      border-radius: 12px;
+      padding: 18px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      min-height: 140px;
+      box-shadow: 0 6px 18px rgba(15,15,15,0.03);
+    }
+    .benefit .icon {
+      width:64px;
+      height:64px;
+      min-width:64px;
+      border-radius:10px;
+      background: var(--soft);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+    }
+    .benefit .icon svg { width:36px; height:36px; fill: none; stroke: var(--text); stroke-width:1.2; opacity:0.95; }
+    .benefit h3 { margin:0; font-size: 16px; color: var(--text); font-weight:700; }
+    .benefit p { margin:6px 0 0; color: var(--muted); font-size: 14px; line-height:1.4; }
+    .benefit .visual { margin-top: 10px; width:100%; height: 48px; border-radius: 8px; background: linear-gradient(90deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01)); display:flex; align-items:center; justify-content:center; color: var(--muted); font-size: 12px; }
+
+    /* --- Visitors & Reviews section --- */
+    .social-wrap {
+      width:100%;
+      max-width:1100px;
+      display:grid;
+      grid-template-columns: 1fr 420px;
+      gap: 18px;
+      align-items:start;
+      padding:8px;
+      box-sizing:border-box;
+    }
+
+    /* visitor card */
+    .visitors {
+      background: rgba(11,11,11,0.02);
+      border:1px solid var(--divider);
+      border-radius:12px;
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .visitors .label { color: var(--muted); font-size:13px; font-weight:600; }
+    .visitors .big {
+      display:flex;
+      align-items:baseline;
+      gap:8px;
+    }
+    .visitors .big .num {
+      font-size: clamp(28px, 7.5vw, 48px);
+      font-weight:900;
+      color: var(--text);
+    }
+    .visitors .trend { color: var(--muted); font-size:13px; }
+
+    /* reviews column */
+    .reviews {
+      background: rgba(11,11,11,0.02);
+      border:1px solid var(--divider);
+      border-radius:12px;
+      padding:18px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .reviews .header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .rating {
+      display:flex;
+      gap:8px;
+      align-items:center;
+    }
+    .rating .score {
+      font-weight:900;
+      font-size:20px;
+      color: var(--text);
+    }
+    .review-list {
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      margin-top:6px;
+    }
+    .review {
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      background: rgba(255,255,255,0.01);
+      border-radius:10px;
+      padding:10px;
+      border: 1px solid var(--divider);
+    }
+    .avatar {
+      width:48px;
+      height:48px;
+      border-radius:10px;
+      overflow:hidden;
+      background:var(--soft);
+      flex-shrink:0;
+    }
+    .avatar img { width:100%; height:100%; object-fit:cover; display:block; }
+
+    .review-body { display:flex; flex-direction:column; gap:6px; min-width:0; }
+    .review .who { font-weight:700; color: var(--text); font-size:14px; }
+    .review .txt { color: var(--muted); font-size:13px; line-height:1.3; overflow:hidden; text-overflow:ellipsis; }
+    .stars { color: #ffb700; font-size:14px; }
+
+    /* small screens: stack benefits & social vertically */
+    @media (max-width:920px){
+      .benefits-wrap { grid-template-columns: 1fr; }
+      .social-wrap { grid-template-columns: 1fr; }
+      .page { gap:20px; }
+    }
+
+    @media (max-width:560px){
+      body { padding-top: calc(var(--header-height) + 12px); }
+      .logo-box { width:50px; height:50px; }
+    }
+
+    .visually-hidden{ position:absolute!important; height:1px; width:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap; }
+  </style>
+</head>
+<body>
+  <!-- subtle background art -->
+  <div class="bg-art" aria-hidden="true">
+    <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" role="img">
+      <g fill="#000000" fill-opacity="0.03">
+        <circle cx="200" cy="300" r="220"/>
+        <path d="M980 40c80 0 140 60 140 140v60c0 26-20 46-46 46-26 0-46-20-46-46v-64l-192 44v96" />
+        <rect x="400" y="520" rx="8" width="18" height="140" />
+        <rect x="436" y="480" rx="8" width="18" height="180" />
+        <path d="M1060 240c8 0 12 0 20 18 0 0 2 80-8 90" />
+      </g>
+    </svg>
+  </div>
+
+  <!-- top-left mark -->
+  <a class="top-mark" href="/" id="brand" title="SoundTrack — Click to focus search">
+    <div class="logo-box" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M9 17a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" fill="#ffffff" opacity="0.98"/>
+        <path d="M21 3v10.5a3 3 0 1 1-2-2.83V6.2L8 9v8.5" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </div>
+
+    <div>
+      <div class="wordmark" aria-hidden="false" role="img" aria-label="SoundTrack">
+        <span class="logo-letter sound">S</span>
+        <span class="logo-letter sound">O</span>
+        <span class="logo-letter sound">U</span>
+        <span class="logo-letter sound">N</span>
+        <span class="logo-letter sound">D</span>
+        <span style="width:8px"></span>
+        <span class="logo-letter track">T</span>
+        <span class="logo-letter track">R</span>
+        <span class="logo-letter track">A</span>
+        <span class="logo-letter track">C</span>
+        <span class="logo-letter track">K</span>
+      </div>
+      <div class="tagline" aria-hidden="true">Minimal music search — white & black</div>
+    </div>
+  </a>
+
+  <main class="page" role="main" aria-labelledby="search-label">
+    <!-- top stats: songs and visitors -->
+    <div class="top-stats" role="region" aria-label="Key metrics">
+      <div class="stats" aria-hidden="false">
+        <div class="count" id="song-count" aria-live="polite">0<small aria-hidden="true">+</small></div>
+        <div class="count-label">Songs indexed and ready to search</div>
+      </div>
+
+      <div class="stats" aria-hidden="false">
+        <div class="count" id="visitor-count" aria-live="polite">0<small aria-hidden="true"></small></div>
+        <div class="count-label">Visitors since launch</div>
+      </div>
+    </div>
+
+    <!-- search -->
+    <section style="width:100%; display:flex; justify-content:center;">
+      <form class="search" role="search" method="get" action="/search-sfx" aria-labelledby="search-label" novalidate>
+        <label id="search-label" class="visually-hidden" for="q">Search music</label>
+
+        <div class="icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 21l-4.35-4.35" stroke="var(--text)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="11" cy="11" r="6.2" stroke="var(--text)" stroke-width="1.4" opacity="0.9"/>
+          </svg>
+        </div>
+
+        <input id="q" name="q" type="search" autocomplete="off"
+               placeholder="Dumb it down,calm down and Search it how you hear it…"
+               aria-label="Search query" />
+
+
+        <button type="submit" aria-label="Search">
+          Search
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 21l-4.35-4.35" stroke="#ffffff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="11" cy="11" r="6.2" stroke="#ffffff" stroke-width="1.6" opacity="0.95"/>
+          </svg>
+        </button>
+      </form>
+    </section>
+
+    <div class="note">This page is the front-end search interface only — results are shown on your results page after submission.</div>
+
+    <!-- Benefits (six cards) -->
+    <section aria-labelledby="benefits-heading" style="width:100%;">
+      <h2 id="benefits-heading" class="visually-hidden">Why AI search for sound effects</h2>
+
+      <div class="benefits-wrap" role="list">
+        <article class="benefit" role="listitem" aria-labelledby="b1">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48"><path d="M24 8v18" /><path d="M17 18a7 7 0 0 0 14 0" /><path d="M12 34h24" /></svg>
+          </div>
+          <div>
+            <h3 id="b1">Search the way you hear it</h3>
+            <p>Hum, whistle or describe the sound — AI understands audio cues and natural language so you find the exact sound in fewer steps.</p>
+            <div class="visual" aria-hidden="true">
+              <svg viewBox="0 0 120 36" class="wave" xmlns="http://www.w3.org/2000/svg"><polyline points="0,18 15,8 30,22 45,6 60,28 75,14 90,18 105,10 120,18" stroke="#111" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+          </div>
+        </article>
+
+        <article class="benefit" role="listitem" aria-labelledby="b2">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="10" /><circle cx="24" cy="24" r="4" /></svg>
+          </div>
+          <div>
+            <h3 id="b2">Precision matching</h3>
+            <p>AI matches timbre, rhythm and context — not just keywords — giving fewer false positives and more relevant picks for your project.</p>
+            <div class="visual" aria-hidden="true">Exact-match examples: <strong style="color:var(--text); margin-left:6px;">door creak • thunder • vinyl scratch</strong></div>
+          </div>
+        </article>
+
+        <article class="benefit" role="listitem" aria-labelledby="b3">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48"><path d="M12 34c6-2 12-8 18-14 6-6 12-12 12-12" /><path d="M6 40c4-2 8-4 12-4" /></svg>
+          </div>
+          <div>
+            <h3 id="b3">Faster discovery</h3>
+            <p>Surface relevant sounds quickly — AI suggests variants and related layers so you can iterate without endless searching.</p>
+            <div class="visual" aria-hidden="true">Try: "hum a short loop" or "sharp metallic ding"</div>
+          </div>
+        </article>
+
+        <article class="benefit" role="listitem" aria-labelledby="b4">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48"><rect x="10" y="10" width="28" height="28" rx="4" /><path d="M16 32l16-16" /></svg>
+          </div>
+          <div>
+            <h3 id="b4">Context-aware suggestions</h3>
+            <p>AI recommends sounds that make sense in context (scene mood, tempo, environment), helping non-experts pick the right effect.</p>
+            <div class="visual" aria-hidden="true">Context: "rainy alleyway scene" → layered ambience suggestions</div>
+          </div>
+        </article>
+
+        <article class="benefit" role="listitem" aria-labelledby="b5">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48"><path d="M8 28h32" /><path d="M16 20v-8" /><path d="M32 20v-8" /></svg>
+          </div>
+          <div>
+            <h3 id="b5">Better creative control</h3>
+            <p>Find the right texture, duration or intensity by searching descriptively (e.g. "soft distant bell") and refine instantly.</p>
+            <div class="visual" aria-hidden="true">Controls: intensity • length • pitch</div>
+          </div>
+        </article>
+
+        <article class="benefit" role="listitem" aria-labelledby="b6">
+          <div class="icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48"><path d="M12 36c6-2 24-18 36-30" /><circle cx="8" cy="40" r="3" /></svg>
+          </div>
+          <div>
+            <h3 id="b6">Discover unexpected matches</h3>
+            <p>AI surfaces creative or unusual matches you might not think to search for, inspiring new directions for your sound design.</p>
+            <div class="visual" aria-hidden="true">Inspiration: "surprising percussive textures"</div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Visitors & Reviews -->
+    <section aria-labelledby="social-heading" style="width:100%;">
+      <h2 id="social-heading" class="visually-hidden">Visitors & Customer Reviews</h2>
+
+      <div class="social-wrap">
+        <!-- Visitors -->
+        <div class="visitors" role="region" aria-labelledby="vis-label">
+          <div id="vis-label" class="label">Site visitors</div>
+          <div class="big">
+            <div class="num" id="visitor-count">0</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-start;">
+              <div class="trend">+12% over last month</div>
+              <div style="color:var(--muted);font-size:13px;">Unique visits, tracked front-end (mock)</div>
+            </div>
+          </div>
+          <div style="margin-top:6px;color:var(--muted);font-size:13px;">Note: this is a front-end demo. Wire a real analytics endpoint for live counts.</div>
+        </div>
+
+        <!-- Reviews -->
+        <aside class="reviews" role="region" aria-labelledby="reviews-label">
+          <div class="header">
+            <div>
+              <div id="reviews-label" style="font-weight:800;color:var(--text);">Customer reviews</div>
+              <div style="color:var(--muted);font-size:13px;margin-top:6px;">Real feedback helps shape the AI search experience</div>
+            </div>
+            <div class="rating" aria-hidden="false" aria-label="Average rating 4.6 out of 5">
+              <div class="score">4.6</div>
+              <div style="color:var(--muted);font-size:13px;">/5</div>
+            </div>
+          </div>
+
+          <div class="review-list" id="review-list" aria-live="polite">
+            <!-- Reviews injected by JS -->
+          </div>
+
+          <div style="margin-top:6px;color:var(--muted);font-size:13px;">All reviews are frontend mock data for demo purposes.</div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      // Focus behavior and keyboard shortcut
+      const brand = document.getElementById('brand');
+      const input = document.getElementById('q');
+      const FORM_KEY = 'soundtrack.lastQuery';
+
+      if (brand && input) brand.addEventListener('click', (e) => { e.preventDefault(); input.focus(); });
+
+      document.addEventListener('keydown', (e) => {
+        const tag = (e.target && e.target.tagName) || '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || e.metaKey || e.ctrlKey) return;
+        if (e.key === '/' || e.key.toLowerCase() === 's') {
+          e.preventDefault();
+          input.focus(); input.select && input.select();
+        }
+      });
+
+      // Restore last query if present
+      try { const last = localStorage.getItem(FORM_KEY); if (last) input.value = last; } catch (err) {}
+
+      // Save query on submit
+      const form = input.closest('form');
+      if (form) form.addEventListener('submit', () => { try { localStorage.setItem(FORM_KEY, input.value || ''); } catch (e) {} });
+
+      // Mobile placeholder behavior
+      input.addEventListener('focus', () => input.placeholder = '');
+      input.addEventListener('blur', () => { if (!input.value) input.placeholder = "Dumb it Down , Calm down and Search it How you Hears it…"; });
+
+      // Animated counters
+      function formatNumber(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
+
+      function animateCount(el, to, duration = 1100, suffix = '') {
+        const start = 0;
+        const range = to - start;
+        const startTime = performance.now();
+        const step = (now) => {
+          const elapsed = now - startTime;
+          const t = Math.min(1, elapsed / duration);
+          const eased = 1 - Math.pow(1 - t, 3);
+          const current = Math.floor(start + range * eased);
+          el.textContent = formatNumber(current) + suffix;
+          if (t < 1) requestAnimationFrame(step);
+          else el.textContent = formatNumber(to) + suffix;
+        };
+        requestAnimationFrame(step);
+      }
+
+      // Songs counter (existing)
+      const elSongs = document.getElementById('song-count');
+      const songsAvailable = "{{index_length}}"; // mock value - change as needed
+      animateCount(elSongs, songsAvailable, 1200, '+');
+
+      // Visitors counter
+      const elVisitors = document.getElementById('visitor-count');
+      const visitors = 254321; // mock visitor count; replace with real analytics if available
+      animateCount(elVisitors, visitors, 1300, '');
+
+      // Render mock reviews (frontend-only)
+      const reviews = [
+        { name: 'Alex R.', text: 'AI search found the exact atmospheric rain FX I described — saved hours.', rating: 5, avatar: 'https://i.pravatar.cc/64?img=12' },
+        { name: 'Maya T.', text: 'Great precision. The “vinyl scratch” matches were surprisingly accurate.', rating: 4.5, avatar: 'https://i.pravatar.cc/64?img=32' },
+        { name: 'Daniel K.', text: 'Fast discovery and suggested layers were super helpful for my short film.', rating: 4.7, avatar: 'https://i.pravatar.cc/64?img=45' },
+        { name: 'Priya S.', text: 'I like being able to hum and find similar sounds — brilliant feature.', rating: 4.8, avatar: 'https://i.pravatar.cc/64?img=66' }
+      ];
+
+      const reviewList = document.getElementById('review-list');
+
+      function stars(r) {
+        // simple star string (full and half) - front-end only
+        const full = Math.floor(r);
+        const half = r - full >= 0.5 ? 1 : 0;
+        let out = '';
+        for (let i=0;i<full;i++) out += '★';
+        if (half) out += '☆';
+        // pad to 5 visually with light stars (using CSS color)
+        return out;
+      }
+
+      reviews.forEach(rv => {
+        const d = document.createElement('div');
+        d.className = 'review';
+        d.innerHTML = `
+          <div class="avatar" aria-hidden="true"><img src="${rv.avatar}" alt="${rv.name} avatar" /></div>
+          <div class="review-body">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="who">${rv.name}</div>
+              <div class="stars" aria-hidden="true" title="${rv.rating} out of 5">${'★'.repeat(Math.round(rv.rating))}</div>
+            </div>
+            <div class="txt">${rv.text}</div>
+          </div>
+        `;
+        reviewList.appendChild(d);
+      });
+
+      // Accessibility: ensure aria-live updated for main counters when animation completes
+      setTimeout(() => {
+        elSongs.setAttribute('aria-label', `${formatNumber(songsAvailable)} songs available`);
+        elVisitors.setAttribute('aria-label', `${formatNumber(visitors)} visitors`);
+      }, 1400);
+
+    })();
+  </script>
+</body>
+</html>
